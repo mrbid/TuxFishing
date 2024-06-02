@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component type="desktop-application">
+	<id>com.voxdsp.TuxFishing</id>
+	<metadata_license>CC-BY-4.0</metadata_license>
+	<project_license>MIT</project_license>
+	<developer_name>James William Fletcher</developer_name>
+	<launchable type="desktop-id">com.voxdsp.TuxFishing.desktop</launchable>
+	<name>Tux Fishing</name>
+	<summary>3D Fishing Game</summary>
+	<description>
+		<p>3D Fishing with 55 species of fish!</p>
+		<ul>
+			<li>Mouse = Rotate Camera, Scroll = Zoom Camera</li>
+			<li>W,A / Arrows = Move Rod Cast Direction</li>
+			<li>Space = Cast Rod, the higher the rod when you release the spacebar the farther the lure launches.</li>
+		</ul>
+		<p>Once you catch a fish keep hitting space to keep the rod up to reel it in.</p>
+	</description>
+	<screenshots>
+		<screenshot type="default">
+			<image>.png</image>
+			<caption>Tux preparing to cast his lure!</caption>
+		</screenshot>
+	</screenshots>
+	<url type="homepage">https://github.com/mrbid/tuxfishing</url>
+	<releases>
+		<release version="1.0" date="2024-06-03" />
+	</releases>
+	<content_rating type="oars-1.0" />
+</component>
