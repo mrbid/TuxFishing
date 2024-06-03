@@ -1,4 +1,4 @@
-# Tuux Fishing
+# Tux Fishing
 
 ![Screenshot of the Tux Fishing game](https://raw.githubusercontent.com/mrbid/TuxFishing/main/screenshot.png)
 
