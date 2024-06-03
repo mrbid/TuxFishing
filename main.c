@@ -119,6 +119,7 @@ float zoom = -3.3f;
 #define FAR_DISTANCE 16.f
 uint ks[2]; // is rotate key pressed toggle
 uint cast = 0; // is casting toggle
+uint caught = 0; // total fish caught
 float woff = 0.f; // wave offset
 float pr = 0.f; // player rotation (yaw)
 float rodr = 0.f; // fishing rod rotation (pitch)
@@ -127,7 +128,7 @@ vec fp = (vec){0.f, 0.f, 0.f}; // float position
 float frx=0.f, fry=0.f, frr=0.f; // float return direction
 int hooked = -1; // is a fish hooked, if so, its the ID of the fish.
 float next_wild_fish = 0.f; // time for next wild fish discovery
-int last_fish[2] = {0};
+int last_fish[2]={0};
 uint lfi=0;
 float winning_fish = 0.f;
 uint winning_fish_id = 0;
@@ -139,6 +140,8 @@ float shoal_nt[3];// next shoal jump time
 float shoal_r1[3];// jump rots
 float shoal_r2[3];
 float shoal_r3[3];
+
+float caught_list[53]={0};
 
 
 //*************************************
@@ -158,6 +161,12 @@ void updateModelView()
 //*************************************
 // game functions
 //*************************************
+uint ratioCaught()
+{
+    uint r = 0;
+    for(uint i=0; i<53; i++){if(caught_list[i] == 1){r++;}}
+    return r;
+}
 void rndShoalPos(uint i)
 {
     const float ra = esRandFloat(-PI, PI);
@@ -183,17 +192,19 @@ void resetGame(uint mode)
     winning_fish=0.f;
     winning_fish_id=0;
     next_wild_fish=t+esRandFloat(23.f,180.f);
+    caught=0;
+    //for(uint i=0; i<53; i++){caught_list[i]=0;}
+    memset(&caught_list[0], 0x00, sizeof(float)*53);
     rndShoalPos(0);
     rndShoalPos(1);
     rndShoalPos(2);
-    // woff = 0.f;
-    // glfwSetTime(0.0);
     if(mode == 1)
     {
         char strts[16];
         timestamp(&strts[0]);
         printf("[%s] Game Reset.\n", strts);
     }
+    glfwSetWindowTitle(window, appTitle);
 }
 float getWaterHeight(float x, float y)
 {
@@ -384,7 +395,15 @@ void main_loop()
                 fp = (vec){0.f, 0.f, 0.f};
                 last_fish[lfi] = hooked;
                 if(++lfi > 1){lfi=0;}
+                caught_list[hooked-7] = 1;
                 hooked = -1;
+                caught++;
+                char strts[16];
+                timestamp(&strts[0]);
+                printf("[%s] Fish Caught: %u (%u/53)\n", strts, caught, ratioCaught());
+                char tmp[256];
+                sprintf(tmp, "Tux 🐟 %u (%u/53) 🐟 Fishing", caught, ratioCaught());
+                glfwSetWindowTitle(window, tmp);
             }
             else
             {
@@ -422,13 +441,16 @@ void main_loop()
     // render jumping fish
     for(uint i=0; i<3; i++)
     {
-        const float xm = fp.x - shoal_x[i];
-        const float ym = fp.y - shoal_y[i];
-        const float nd = xm*xm + ym*ym;
-        if(nd < 0.3f)
+        if(hooked == -1)
         {
-            //printf("[%u] %f %f\n", i, nd, shoal_nt[i]);
-            if(shoal_nt[i]-t < -4.5f){hooked = shoal_lfi[i];}
+            const float xm = fp.x - shoal_x[i];
+            const float ym = fp.y - shoal_y[i];
+            const float nd = xm*xm + ym*ym;
+            if(nd < 0.3f)
+            {
+                //printf("[%u] %f %f\n", i, nd, shoal_nt[i]);
+                if(shoal_nt[i]-t < -4.5f){hooked = shoal_lfi[i];}
+            }
         }
 
         if(shoal_nt[i]-t < -11.f){rndShoalPos(i);}
@@ -564,10 +586,10 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         //     //shoal_nt[0] = t;
         //     //hooked = (int)roundf(esRandFloat(7.f, 59.f));
         // }
-        else if(key == GLFW_KEY_R) // reset game
-        {
-            resetGame(1);
-        }
+        // else if(key == GLFW_KEY_R) // reset game
+        // {
+        //     resetGame(1);
+        // }
         else if(key == GLFW_KEY_ESCAPE)
         {
             focus_cursor = 0;
@@ -659,7 +681,7 @@ int main(int argc, char** argv)
     printf("Space = Cast Rod, the higher the rod when you release space the farther the lure launches.\n");
     printf("If you see a fish jump out of the water throw a lure after it and you will catch it straight away.\n");
     printf("F = FPS to console.\n");
-    printf("R = Reset game.\n");
+    //printf("R = Reset game.\n");
     printf("----\n");
     printf("All assets where generated using LUMA GENIE (https://lumalabs.ai/genie).\n");
     printf("----\n");
