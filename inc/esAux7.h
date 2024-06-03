@@ -212,6 +212,7 @@ void esDebug(const GLuint state)
 	esModelArray_index++;
 #endif // I like this system. It's amost frictionless and you can index what you like off it. 
 // but you need the new ptf2.c program: https://gist.github.com/mrbid/35b1d359bddd9304c1961c1bf0fcb882
+// or the newer PTF and PTO programs: https://github.com/mrbid/esAux7
 
 //*************************************
 // SHADER CODE

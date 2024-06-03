@@ -1,9 +1,6 @@
 /*
     James William Fletcher ( github.com/mrbid )
         May 2024
-
-    maybe reality is a cinema of little electrons projecting
-    their most novel shared idea of reality into the void
 */
 
 #include <stdio.h>
@@ -27,7 +24,7 @@
 #define fTime() (float)glfwGetTime()
 
 //#define GL_DEBUG
-#define MAX_MODELS 7 // hard limit, be aware and increase if needed
+#define MAX_MODELS 60 // hard limit, be aware and increase if needed
 #include "inc/esAux7.h"
 #include "inc/matvec.h"
 
@@ -39,6 +36,64 @@
 #include "assets/high/rod.h"    //4
 #include "assets/high/float.h"  //5
 #include "assets/high/splash.h" //6
+
+#include "assets/high/fish/a0.h"     //7
+#include "assets/high/fish/a1.h"     //8
+#include "assets/high/fish/a2.h"     //9
+#include "assets/high/fish/a3.h"     //10
+#include "assets/high/fish/a4.h"     //11
+#include "assets/high/fish/a5.h"     //12
+#include "assets/high/fish/a6.h"     //13
+#include "assets/high/fish/a7.h"     //14
+#include "assets/high/fish/a8.h"     //15
+#include "assets/high/fish/a9.h"     //16
+#include "assets/high/fish/a10.h"    //17
+#include "assets/high/fish/a11.h"    //18
+#include "assets/high/fish/a12.h"    //19
+#include "assets/high/fish/a13.h"    //20
+#include "assets/high/fish/a14.h"    //21
+
+#include "assets/high/fish/b0.h"     //22
+#include "assets/high/fish/b1.h"     //23
+#include "assets/high/fish/b2.h"     //24
+#include "assets/high/fish/b3.h"     //25
+#include "assets/high/fish/b4.h"     //26
+#include "assets/high/fish/b5.h"     //27
+#include "assets/high/fish/b6.h"     //28
+#include "assets/high/fish/b7.h"     //29
+#include "assets/high/fish/b8.h"     //30
+#include "assets/high/fish/b9.h"     //31
+#include "assets/high/fish/b10.h"    //32
+#include "assets/high/fish/b11.h"    //33
+#include "assets/high/fish/b12.h"    //34
+
+#include "assets/high/fish/c0.h"     //35
+#include "assets/high/fish/c1.h"     //36
+#include "assets/high/fish/c2.h"     //37
+#include "assets/high/fish/c3.h"     //38
+#include "assets/high/fish/c4.h"     //39
+#include "assets/high/fish/c5.h"     //40
+#include "assets/high/fish/c6.h"     //41
+#include "assets/high/fish/c7.h"     //42
+#include "assets/high/fish/c8.h"     //43
+#include "assets/high/fish/c9.h"     //44
+#include "assets/high/fish/c10.h"    //45
+#include "assets/high/fish/c11.h"    //46
+
+#include "assets/high/fish/d0.h"     //47
+#include "assets/high/fish/d1.h"     //48
+#include "assets/high/fish/d2.h"     //49
+#include "assets/high/fish/d3.h"     //50
+#include "assets/high/fish/d4.h"     //51
+#include "assets/high/fish/d5.h"     //52
+#include "assets/high/fish/d6.h"     //53
+#include "assets/high/fish/d7.h"     //54
+#include "assets/high/fish/d8.h"     //55
+#include "assets/high/fish/d9.h"     //56
+#include "assets/high/fish/d10.h"    //57
+#include "assets/high/fish/d11.h"    //58
+
+#include "assets/high/fish/e1.h"     //59
 
 
 //*************************************
@@ -63,8 +118,10 @@ float zoom = -3.3f;
 // game vars
 #define FAR_DISTANCE 16.f
 uint ks[2];
+uint cast = 0;
 float woff = 0.f;
 float pr = 0.f;
+float rodr = 0.f;
 
 //*************************************
 // game functions
@@ -123,6 +180,8 @@ void main_loop()
     // inputs
     if(ks[0] == 1){pr -= 1.f*dt;}
     if(ks[1] == 1){pr += 1.f*dt;}
+    if(cast == 1){if(rodr < 2.f){rodr += 3.f*dt;}}
+    else{if(rodr > 0.f){rodr -= 9.f*dt;}}
 
     // water offset
     woff = sinf(t*0.42f);
@@ -192,8 +251,21 @@ void main_loop()
     mIdent(&model);
     mSetPos(&model, (vec){0.f, 0.f, 0.125378f+(woff*-0.026f)});
     mRotZ(&model, pr);
+    mRotX(&model, rodr);
     updateModelView();
     esBindRender(4);
+
+    // render last catch(es)
+    mIdent(&model);
+    mSetPos(&model, (vec){0.f, -0.14f, 0.04f+(woff*-0.026f)});
+    updateModelView();
+    esBindRender(33);
+    //
+    mIdent(&model);
+    mSetPos(&model, (vec){0.02f, 0.2f, 0.05f+(woff*-0.026f)});
+    mRotZ(&model, 90.f*DEG2RAD);
+    updateModelView();
+    esBindRender(44);
 
     ///
 
@@ -210,6 +282,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     {
         if(     key == GLFW_KEY_LEFT  || key == GLFW_KEY_A){ks[0]=1;}
         else if(key == GLFW_KEY_RIGHT || key == GLFW_KEY_D){ks[1]=1;}
+        else if(key == GLFW_KEY_SPACE)                     {cast=1; }
         else if(key == GLFW_KEY_F) // show average fps
         {
             if(t-lfct > 2.0)
@@ -238,6 +311,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     {
         if(     key == GLFW_KEY_LEFT  || key == GLFW_KEY_A){ks[0]=0;}
         else if(key == GLFW_KEY_RIGHT || key == GLFW_KEY_D){ks[1]=0;}
+        else if(key == GLFW_KEY_SPACE)                     {cast=0; }
     }
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -369,6 +443,63 @@ int main(int argc, char** argv)
     register_rod();
     register_float();
     register_splash();
+
+    register_a0();
+    register_a1();
+    register_a2();
+    register_a3();
+    register_a4();
+    register_a5();
+    register_a6();
+    register_a7();
+    register_a8();
+    register_a9();
+    register_a10();
+    register_a11();
+    register_a12();
+    register_a13();
+    register_a14();
+
+    register_b0();
+    register_b1();
+    register_b2();
+    register_b3();
+    register_b4();
+    register_b5();
+    register_b6();
+    register_b7();
+    register_b8();
+    register_b9();
+    register_b10();
+    register_b11();
+    register_b12();
+
+    register_c0();
+    register_c1();
+    register_c2();
+    register_c3();
+    register_c4();
+    register_c5();
+    register_c6();
+    register_c8();
+    register_c9();
+    register_c10();
+    register_c11();
+
+    register_d0();
+    register_d1();
+    register_d2();
+    register_d3();
+    register_d4();
+    register_d5();
+    register_d6();
+    register_d7();
+    register_d8();
+    register_d9();
+    register_d10();
+    register_d11();
+
+    register_e1();
 
 //*************************************
 // configure render options
