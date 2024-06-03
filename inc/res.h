@@ -1,7 +1,6 @@
 #ifndef RES_H
 #define RES_H
 
-// Attribution: Terry A. Davis (https://templeos.org/)
 #pragma GCC diagnostic ignored "-Wtrigraphs"
 //#pragma GCC diagnostic ignored "-Wpointer-sign"
 
