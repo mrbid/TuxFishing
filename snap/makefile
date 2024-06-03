@@ -3,7 +3,7 @@
 name = tuxfishing
 
 all:
-	gcc ../main.c ../glad_gl.c -I ../inc -Ofast -lglfw -lm -o $(name)
+	gcc ../main.c -I ../inc -Ofast -lglfw -lm -o $(name)
 
 install:
 	cp $(name) $(DESTDIR)
