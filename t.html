@@ -38,7 +38,7 @@
 
 </head>
 <body>
-    <canvas id="canvas" onclick="this.focus();" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
+    <canvas id="canvas" onclick="this.focus();this.requestPointerLock()" oncontextmenu="event.preventDefault()" tabindex=-1></canvas>
     <script type='text/javascript'>var Module = {canvas: document.getElementById('canvas')};</script>
     {{{ SCRIPT }}}
 </body>
