@@ -122,15 +122,42 @@ uint cast = 0;
 float woff = 0.f;
 float pr = 0.f;
 float rodr = 0.f;
+vec fp = (vec){0.f, 0.f, 0.f};
 
 //*************************************
 // game functions
 //*************************************
 void resetGame(uint mode)
 {
-    //
-
+    cast = 0;
+    woff = 0.f;
+    pr = 0.f;
+    rodr = 0.f;
+    fp = (vec){0.f, 0.f, 0.f};
     glfwSetTime(0.0);
+}
+float getWaterHeight(float x, float y)
+{
+    const uint imax = water_numvert*3;
+    const int ci = -1;
+    const float cid = 9999.f;
+    for(uint i=0; i < imax; i+=3)
+    {
+        const float xm = (water_vertices[i] - x);
+        const float ym = (water_vertices[i+1] - y);
+        const float nd = (xm*xm + ym*ym);
+        if(nd < cid)
+        {
+            //printf("%u %f\n", ci, cid);
+            ci = i;
+            cid = nd;
+        }
+    }
+    if(ci != -1)
+    {
+        return water_vertices[ci+2];
+    }
+    return woff;
 }
 
 //*************************************
@@ -178,9 +205,16 @@ void main_loop()
 //*************************************
 
     // inputs
-    if(ks[0] == 1){pr -= 1.f*dt;}
-    if(ks[1] == 1){pr += 1.f*dt;}
-    if(cast == 1){if(rodr < 2.f){rodr += 3.f*dt;}}
+    if(ks[0] == 1){pr -= 1.6f*dt;}
+    if(ks[1] == 1){pr += 1.6f*dt;}
+    if(cast == 1)
+    {
+        if(rodr < 2.f){rodr += 1.5f*dt;}
+        const float trodr = rodr+0.23f;
+        fp.x = sinf(pr+d2PI)*(trodr*1.75f);
+        fp.y = cosf(pr+d2PI)*(trodr*1.75f);
+        fp.z = getWaterHeight(fp.x, fp.y);
+    }
     else{if(rodr > 0.f){rodr -= 9.f*dt;}}
 
     // water offset
@@ -254,6 +288,17 @@ void main_loop()
     mRotX(&model, rodr);
     updateModelView();
     esBindRender(4);
+
+    // render float
+    if(fp.x != 0.f || fp.y != 0.f || fp.z != 0.f)
+    { 
+        if(cast == 1){glEnable(GL_BLEND);glUniform1f(opacity_id, 0.5f);}
+        mIdent(&model);
+        mSetPos(&model, (vec){fp.x, fp.y, fp.z*woff});
+        updateModelView();
+        esBindRender(5);
+        if(cast == 1){glDisable(GL_BLEND);}
+    }
 
     // render last catch(es)
     mIdent(&model);
