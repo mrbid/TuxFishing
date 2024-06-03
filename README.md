@@ -7,7 +7,7 @@
 - **Play Online:** https://pushergames.itch.io/tuxfishing
 - **Flathub:** https://flathub.org/apps/com.voxdsp.TuxFishing
 - **Snapcraft:** https://snapcraft.io/tuxfishing
-- **Windows:** [TuxFishing_windows.zip](https://github.com/mrbid/PAC-GAL/releases/download/1.0/TuxFishing_windows.zip)
+- **Windows:** [TuxFishing_windows.zip](https://github.com/mrbid/TuxFishing/releases/download/1.0/TuxFishing_windows.zip)
 
 ## build
 ```
