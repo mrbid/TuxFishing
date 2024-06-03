@@ -3,7 +3,7 @@
 
 /*
     James William Fletcher (github.com/mrbid)
-        September 2021 - February 2023
+        September 2021 - June 2024
 
     Portable floating-point Vec4 lib.
 
