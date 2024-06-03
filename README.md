@@ -13,7 +13,7 @@
 ```
 sudo apt install --assume-yes libglfw3-dev libglfw3 upx-ucl
 make
-./release/PacGal_linux
+./release/TuxFishing_linux
 ```
 You don't need [UPX](https://upx.github.io/) but if you don't have the package you can download the binary from [here](https://github.com/upx/upx/releases).
 
