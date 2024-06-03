@@ -28,7 +28,7 @@ modules:
   - name: tuxfishing
     buildsystem: simple
     build-commands:
-      - cc main.c glad_gl.c -I inc -Ofast -L/app/lib -lglfw -lm -o tuxfishing
+      - cc main.c -I inc -Ofast -L/app/lib -lglfw -lm -o tuxfishing
       - install -Dm 0755 tuxfishing -t ${FLATPAK_DEST}/bin
       - install -Dm 0644 flat/tuxfishing.desktop ${FLATPAK_DEST}/share/applications/tuxfishing.desktop
       - install -Dm 0644 flat/tuxfishing.appdata.xml ${FLATPAK_DEST}/share/metainfo/tuxfishing.appdata.xml
