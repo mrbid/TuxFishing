@@ -141,6 +141,15 @@ float shoal_nt[3];// next shoal jump time
 //*************************************
 // game functions
 //*************************************
+void rndShoalPos(uint i)
+{
+    const float ra = esRandFloat(-PI, PI);
+    const float rr = esRandFloat(2.3f, 4.f);
+    shoal_x[i] = sinf(ra)*rr;
+    shoal_y[i] = cosf(ra)*rr;
+    shoal_lfi[i] = (int)roundf(esRandFloat(7.f, 59.f));
+    shoal_nt[i] = t + esRandFloat(6.5f, 16.f);
+}
 void resetGame(uint mode)
 {
     cast=0;
@@ -157,6 +166,9 @@ void resetGame(uint mode)
     winning_fish=0.f;
     winning_fish_id=0;
     next_wild_fish=t+esRandFloat(23.f,180.f);
+    rndShoalPos(0);
+    rndShoalPos(1);
+    rndShoalPos(2);
     // woff = 0.f;
     // glfwSetTime(0.0);
     if(mode == 1)
@@ -252,6 +264,17 @@ void main_loop()
     // water offset
     woff = sinf(t*0.42f);
 
+    // shoal jump dispatcher
+    for(uint i=0; i<3; i++)
+    {
+        if(shoal_nt[i]-t < -3.f)
+        {
+            //
+            shoal_nt[i] = t + esRandFloat(6.5f, 16.f);
+            continue;
+        }
+    }
+
     // camera
     if(focus_cursor == 1)
     {
@@ -346,6 +369,27 @@ void main_loop()
     mRotX(&model, rodr);
     updateModelView();
     esBindRender(4);
+
+    // render jumping fish
+    for(uint i=0; i<3; i++)
+    {
+        const float d = shoal_nt[i]-t;
+        if(d < 0.f)
+        {
+            const float z = -0.1f+(0.4f*(fabsf(d)/3.f));
+            const float wah = getWaterHeight(shoal_x[i], shoal_y[i])*woff;
+
+            mIdent(&model);
+            mSetPos(&model, (vec){shoal_x[i], shoal_y[i], wah});
+            updateModelView();
+            esBindRender(6);
+
+            mIdent(&model);
+            mSetPos(&model, (vec){shoal_x[i], shoal_y[i], z});
+            updateModelView();
+            esBindRender(shoal_lfi[i]);
+        }
+    }
 
     // render winning fish
     if(winning_fish > t)
@@ -459,10 +503,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 fc = 0;
             }
         }
-        // else if(key == GLFW_KEY_E)
-        // {
-        //     hooked = (int)roundf(esRandFloat(7.f, 59.f));
-        // }
+        else if(key == GLFW_KEY_E)
+        {
+            shoal_nt[0] = t;
+            //hooked = (int)roundf(esRandFloat(7.f, 59.f));
+        }
         else if(key == GLFW_KEY_R) // reset game
         {
             resetGame(1);
