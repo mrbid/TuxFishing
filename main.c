@@ -136,7 +136,24 @@ float shoal_x[3]; // position of shoal
 float shoal_y[3]; // position of shoal
 uint shoal_lfi[3];// last fish id that jumped
 float shoal_nt[3];// next shoal jump time
+float shoal_r1[3];// jump rots
+float shoal_r2[3];
+float shoal_r3[3];
 
+
+//*************************************
+// utility functions
+//*************************************
+void timestamp(char* ts)
+{
+    const time_t tt = time(0);
+    strftime(ts, 16, "%H:%M:%S", localtime(&tt));
+}
+void updateModelView()
+{
+    mMul(&modelview, &model, &view);
+    glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
+}
 
 //*************************************
 // game functions
@@ -144,7 +161,7 @@ float shoal_nt[3];// next shoal jump time
 void rndShoalPos(uint i)
 {
     const float ra = esRandFloat(-PI, PI);
-    const float rr = esRandFloat(2.3f, 4.f);
+    const float rr = esRandFloat(2.3f, 3.6f);
     shoal_x[i] = sinf(ra)*rr;
     shoal_y[i] = cosf(ra)*rr;
     shoal_lfi[i] = (int)roundf(esRandFloat(7.f, 59.f));
@@ -181,8 +198,8 @@ void resetGame(uint mode)
 float getWaterHeight(float x, float y)
 {
     const uint imax = water_numvert*3;
-    const int ci = -1;
-    const float cid = 9999.f;
+    int ci = -1;
+    float cid = 9999.f;
     for(uint i=0; i < imax; i+=3)
     {
         const float xm = water_vertices[i]   - x;
@@ -199,20 +216,6 @@ float getWaterHeight(float x, float y)
         return water_vertices[ci+2];
     }
     return woff;
-}
-
-//*************************************
-// utility functions
-//*************************************
-void timestamp(char* ts)
-{
-    const time_t tt = time(0);
-    strftime(ts, 16, "%H:%M:%S", localtime(&tt));
-}
-void updateModelView()
-{
-    mMul(&modelview, &model, &view);
-    glUniformMatrix4fv(modelview_id, 1, GL_FALSE, (float*)&modelview.m[0][0]);
 }
 
 //*************************************
@@ -263,17 +266,6 @@ void main_loop()
 
     // water offset
     woff = sinf(t*0.42f);
-
-    // shoal jump dispatcher
-    for(uint i=0; i<3; i++)
-    {
-        if(shoal_nt[i]-t < -3.f)
-        {
-            //
-            shoal_nt[i] = t + esRandFloat(6.5f, 16.f);
-            continue;
-        }
-    }
 
     // camera
     if(focus_cursor == 1)
@@ -370,54 +362,6 @@ void main_loop()
     updateModelView();
     esBindRender(4);
 
-    // render jumping fish
-    for(uint i=0; i<3; i++)
-    {
-        const float d = shoal_nt[i]-t;
-        if(d < 0.f)
-        {
-            const float z = -0.1f+(0.4f*(fabsf(d)/3.f));
-            const float wah = getWaterHeight(shoal_x[i], shoal_y[i])*woff;
-
-            mIdent(&model);
-            mSetPos(&model, (vec){shoal_x[i], shoal_y[i], wah});
-            updateModelView();
-            esBindRender(6);
-
-            mIdent(&model);
-            mSetPos(&model, (vec){shoal_x[i], shoal_y[i], z});
-            updateModelView();
-            esBindRender(shoal_lfi[i]);
-        }
-    }
-
-    // render winning fish
-    if(winning_fish > t)
-    {
-        const float d = winning_fish - t;
-        if(d < 1.f)
-        {
-            glEnable(GL_BLEND);
-            glUniform1f(opacity_id, d);
-            mIdent(&model);
-            mSetPos(&model, (vec){0.f, 0.f, 0.37f});
-            mScale1(&model, 3.f);
-            mRotZ(&model, t*2.1f);
-            updateModelView();
-            esBindRender(winning_fish_id);
-            glDisable(GL_BLEND);
-        }
-        else
-        {
-            mIdent(&model);
-            mSetPos(&model, (vec){0.f, 0.f, 0.37f});
-            mScale1(&model, 3.f);
-            mRotZ(&model, t*2.1f);
-            updateModelView();
-            esBindRender(winning_fish_id);
-        }
-    }
-
     // render float
     if(fp.x != 0.f || fp.y != 0.f || fp.z != 0.f)
     { 
@@ -475,6 +419,118 @@ void main_loop()
         }
     }
 
+    // render jumping fish
+    for(uint i=0; i<3; i++)
+    {
+        const float xm = fp.x - shoal_x[i];
+        const float ym = fp.y - shoal_y[i];
+        const float nd = xm*xm + ym*ym;
+        if(nd < 0.3f)
+        {
+            //printf("[%u] %f %f\n", i, nd, shoal_nt[i]);
+            if(shoal_nt[i]-t < -4.5f){hooked = shoal_lfi[i];}
+        }
+
+        if(shoal_nt[i]-t < -11.f){rndShoalPos(i);}
+
+        const float d = shoal_nt[i]-t;
+        if(d < 0.f && d >= -1.5f)
+        {
+            const float z = -0.03f+(0.33f*(fabsf(d)/1.5f));
+            const float wah = (getWaterHeight(shoal_x[i], shoal_y[i])*woff)-0.016f;
+
+            mIdent(&model);
+            mSetPos(&model, (vec){shoal_x[i], shoal_y[i], wah});
+            mRotZ(&model, t*0.3f);
+            updateModelView();
+            esBindRender(6);
+
+            mIdent(&model);
+            mSetPos(&model, (vec){shoal_x[i], shoal_y[i], z});
+            shoal_r1[i] += esRandFloat(0.1f, 0.6f)*dt;
+            shoal_r2[i] += esRandFloat(0.1f, 0.6f)*dt;
+            shoal_r3[i] += esRandFloat(0.1f, 0.6f)*dt;
+            mRotX(&model, shoal_r1[i]);
+            mRotY(&model, shoal_r2[i]);
+            mRotZ(&model, shoal_r3[i]);
+            updateModelView();
+            esBindRender(shoal_lfi[i]);
+        }
+        else if(d > -2.5f && d < -1.5f)
+        {
+            const float wah = (getWaterHeight(shoal_x[i], shoal_y[i])*woff)-0.016f;
+
+            mIdent(&model);
+            mSetPos(&model, (vec){shoal_x[i], shoal_y[i], wah});
+            mRotZ(&model, t*0.3f);
+            updateModelView();
+            esBindRender(6);
+
+            mIdent(&model);
+            mSetPos(&model, (vec){shoal_x[i], shoal_y[i], 0.3f});
+            shoal_r1[i] += esRandFloat(0.1f, 0.6f)*dt;
+            shoal_r2[i] += esRandFloat(0.1f, 0.6f)*dt;
+            shoal_r3[i] += esRandFloat(0.1f, 0.6f)*dt;
+            mRotX(&model, shoal_r1[i]);
+            mRotY(&model, shoal_r2[i]);
+            mRotZ(&model, shoal_r3[i]);
+            updateModelView();
+            esBindRender(shoal_lfi[i]);
+        }
+        else if(d > -5.5f && d < -2.5f)
+        {
+            const float z = 0.3f-(0.303f*(fabsf(d+2.5f)/1.5f));
+            const float wah = (getWaterHeight(shoal_x[i], shoal_y[i])*woff)-0.016f;
+
+            glEnable(GL_BLEND);
+            glUniform1f(opacity_id, d+4.5f);
+            mIdent(&model);
+            mSetPos(&model, (vec){shoal_x[i], shoal_y[i], wah});
+            mRotZ(&model, t*0.3f);
+            updateModelView();
+            esBindRender(6);
+            glDisable(GL_BLEND);
+
+            mIdent(&model);
+            mSetPos(&model, (vec){shoal_x[i], shoal_y[i], z});
+            shoal_r1[i] += esRandFloat(0.1f, 0.6f)*dt;
+            shoal_r2[i] += esRandFloat(0.1f, 0.6f)*dt;
+            shoal_r3[i] += esRandFloat(0.1f, 0.6f)*dt;
+            mRotX(&model, shoal_r1[i]);
+            mRotY(&model, shoal_r2[i]);
+            mRotZ(&model, shoal_r3[i]);
+            updateModelView();
+            esBindRender(shoal_lfi[i]);
+        }
+    }
+
+    // render winning fish
+    if(winning_fish > t)
+    {
+        const float d = winning_fish - t;
+        if(d < 1.f)
+        {
+            glEnable(GL_BLEND);
+            glUniform1f(opacity_id, d);
+            mIdent(&model);
+            mSetPos(&model, (vec){0.f, 0.f, 0.37f});
+            mScale1(&model, 3.f);
+            mRotZ(&model, t*2.1f);
+            updateModelView();
+            esBindRender(winning_fish_id);
+            glDisable(GL_BLEND);
+        }
+        else
+        {
+            mIdent(&model);
+            mSetPos(&model, (vec){0.f, 0.f, 0.37f});
+            mScale1(&model, 3.f);
+            mRotZ(&model, t*2.1f);
+            updateModelView();
+            esBindRender(winning_fish_id);
+        }
+    }
+
     ///
 
     // display render
@@ -503,11 +559,11 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 fc = 0;
             }
         }
-        else if(key == GLFW_KEY_E)
-        {
-            shoal_nt[0] = t;
-            //hooked = (int)roundf(esRandFloat(7.f, 59.f));
-        }
+        // else if(key == GLFW_KEY_E)
+        // {
+        //     //shoal_nt[0] = t;
+        //     //hooked = (int)roundf(esRandFloat(7.f, 59.f));
+        // }
         else if(key == GLFW_KEY_R) // reset game
         {
             resetGame(1);
