@@ -4,11 +4,11 @@ version: '1.0'
 license: GPL-2.0-only
 summary: 3D Fishing Game
 description: |
-  3D Fishing with 55 species of fish!
+  3D Fishing with 53 species of fish!
   Mouse = Rotate Camera, Scroll = Zoom Camera
   W,A / Arrows = Move Rod Cast Direction
   Space = Cast Rod, the higher the rod when you release space the farther the lure launches.
-  Once you catch a fish keep hitting space to keep the rod up to reel it in.
+  If you see a fish jump out of the water throw a lure after it and you will catch it straight away.
 
 grade: stable
 confinement: strict

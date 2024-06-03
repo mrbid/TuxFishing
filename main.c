@@ -117,24 +117,54 @@ float zoom = -3.3f;
 
 // game vars
 #define FAR_DISTANCE 16.f
-uint ks[2];
-uint cast = 0;
-float woff = 0.f;
-float pr = 0.f;
-float rodr = 0.f;
-vec fp = (vec){0.f, 0.f, 0.f};
+uint ks[2]; // is rotate key pressed toggle
+uint cast = 0; // is casting toggle
+float woff = 0.f; // wave offset
+float pr = 0.f; // player rotation (yaw)
+float rodr = 0.f; // fishing rod rotation (pitch)
+vec fp = (vec){0.f, 0.f, 0.f}; // float position
+
+float frx=0.f, fry=0.f, frr=0.f; // float return direction
+int hooked = -1; // is a fish hooked, if so, its the ID of the fish.
+float next_wild_fish = 0.f; // time for next wild fish discovery
+int last_fish[2] = {0};
+uint lfi=0;
+float winning_fish = 0.f;
+uint winning_fish_id = 0;
+
+float shoal_x[3]; // position of shoal
+float shoal_y[3]; // position of shoal
+uint shoal_lfi[3];// last fish id that jumped
+float shoal_nt[3];// next shoal jump time
+
 
 //*************************************
 // game functions
 //*************************************
 void resetGame(uint mode)
 {
-    cast = 0;
-    woff = 0.f;
-    pr = 0.f;
-    rodr = 0.f;
-    fp = (vec){0.f, 0.f, 0.f};
-    glfwSetTime(0.0);
+    cast=0;
+    pr=0.f;
+    rodr=0.f;
+    fp=(vec){0.f, 0.f, 0.f};
+    frx=0.f;
+    fry=0.f;
+    frr=0.f;
+    hooked=-1;
+    last_fish[0]=-1;
+    last_fish[1]=-1;
+    lfi=0;
+    winning_fish=0.f;
+    winning_fish_id=0;
+    next_wild_fish=t+esRandFloat(23.f,180.f);
+    // woff = 0.f;
+    // glfwSetTime(0.0);
+    if(mode == 1)
+    {
+        char strts[16];
+        timestamp(&strts[0]);
+        printf("[%s] Game Reset.\n", strts);
+    }
 }
 float getWaterHeight(float x, float y)
 {
@@ -143,12 +173,11 @@ float getWaterHeight(float x, float y)
     const float cid = 9999.f;
     for(uint i=0; i < imax; i+=3)
     {
-        const float xm = (water_vertices[i] - x);
-        const float ym = (water_vertices[i+1] - y);
-        const float nd = (xm*xm + ym*ym);
+        const float xm = water_vertices[i]   - x;
+        const float ym = water_vertices[i+1] - y;
+        const float nd = xm*xm + ym*ym;
         if(nd < cid)
         {
-            //printf("%u %f\n", ci, cid);
             ci = i;
             cid = nd;
         }
@@ -205,17 +234,20 @@ void main_loop()
 //*************************************
 
     // inputs
-    if(ks[0] == 1){pr -= 1.6f*dt;}
-    if(ks[1] == 1){pr += 1.6f*dt;}
-    if(cast == 1)
+    if(hooked == -1)
     {
-        if(rodr < 2.f){rodr += 1.5f*dt;}
-        const float trodr = rodr+0.23f;
-        fp.x = sinf(pr+d2PI)*(trodr*1.75f);
-        fp.y = cosf(pr+d2PI)*(trodr*1.75f);
-        fp.z = getWaterHeight(fp.x, fp.y);
+        if(ks[0] == 1){pr -= 1.6f*dt;fp=(vec){0.f, 0.f, 0.f};}
+        if(ks[1] == 1){pr += 1.6f*dt;fp=(vec){0.f, 0.f, 0.f};}
+        if(cast == 1)
+        {
+            if(rodr < 2.f){rodr += 1.5f*dt;}
+            const float trodr = (rodr+0.23f)*1.65f;
+            frx = sinf(pr+d2PI), fry = cosf(pr+d2PI), frr = -d2PI+pr;
+            fp.x = frx*trodr, fp.y = fry*trodr;
+            fp.z = getWaterHeight(fp.x, fp.y);
+        }
+        else{if(rodr > 0.f){rodr -= 9.f*dt;}}
     }
-    else{if(rodr > 0.f){rodr -= 9.f*dt;}}
 
     // water offset
     woff = sinf(t*0.42f);
@@ -262,6 +294,15 @@ void main_loop()
     updateModelView();
     esBindRenderF(1);
 
+    // glEnable(GL_BLEND);
+    // glUniform1f(opacity_id, 0.5f);
+    // mIdent(&model);
+    // mSetPos(&model, (vec){0.f, 0.f, 0.01f});
+    // mScale(&model, 1.f, 1.f, woff);
+    // updateModelView();
+    // esBindRenderF(1);
+    // glDisable(GL_BLEND);
+
     // shade lambert
     shadeLambert(&position_id, &projection_id, &modelview_id, &lightpos_id, &normal_id, &color_id, &ambient_id, &saturate_id, &opacity_id);
     glUniformMatrix4fv(projection_id, 1, GL_FALSE, (float*)&projection.m[0][0]);
@@ -273,6 +314,23 @@ void main_loop()
     mSetPos(&model, (vec){0.f, 0.f, woff*-0.026f});
     updateModelView();
     esBindRender(2);
+
+    // render last catch(es)
+    if(last_fish[0] != -1)
+    {
+        mIdent(&model);
+        mSetPos(&model, (vec){0.f, -0.14f, 0.04f+(woff*-0.026f)});
+        updateModelView();
+        esBindRender(last_fish[0]);
+    }
+    if(last_fish[1] != -1)
+    {
+        mIdent(&model);
+        mSetPos(&model, (vec){0.02f, 0.2f, 0.05f+(woff*-0.026f)});
+        mRotZ(&model, 90.f*DEG2RAD);
+        updateModelView();
+        esBindRender(last_fish[1]);
+    }
 
     // render tux
     mIdent(&model);
@@ -289,28 +347,89 @@ void main_loop()
     updateModelView();
     esBindRender(4);
 
+    // render winning fish
+    if(winning_fish > t)
+    {
+        const float d = winning_fish - t;
+        if(d < 1.f)
+        {
+            glEnable(GL_BLEND);
+            glUniform1f(opacity_id, d);
+            mIdent(&model);
+            mSetPos(&model, (vec){0.f, 0.f, 0.37f});
+            mScale1(&model, 3.f);
+            mRotZ(&model, t*2.1f);
+            updateModelView();
+            esBindRender(winning_fish_id);
+            glDisable(GL_BLEND);
+        }
+        else
+        {
+            mIdent(&model);
+            mSetPos(&model, (vec){0.f, 0.f, 0.37f});
+            mScale1(&model, 3.f);
+            mRotZ(&model, t*2.1f);
+            updateModelView();
+            esBindRender(winning_fish_id);
+        }
+    }
+
     // render float
     if(fp.x != 0.f || fp.y != 0.f || fp.z != 0.f)
     { 
-        if(cast == 1){glEnable(GL_BLEND);glUniform1f(opacity_id, 0.5f);}
-        mIdent(&model);
-        mSetPos(&model, (vec){fp.x, fp.y, fp.z*woff});
-        updateModelView();
-        esBindRender(5);
-        if(cast == 1){glDisable(GL_BLEND);}
-    }
+        // is a fish hooked?
+        if(hooked != -1)
+        {
+            // reel it in
+            rodr = 0.8f;
+            const float rs = 0.32f*dt;
+            fp.x += -frx*rs;
+            fp.y += -fry*rs;
+            // fp.x += -fp.x*0.3f*dt;
+            // fp.y += -fp.y*0.3f*dt;
+            const float wh = getWaterHeight(fp.x, fp.y);
+            if(fabsf(wh-fp.z) > 0.03f){fp.z=wh;} // lol
+            if(vMag(fp) < 0.1f)
+            {
+                winning_fish = t+4.f;
+                winning_fish_id = hooked;
+                fp = (vec){0.f, 0.f, 0.f};
+                last_fish[lfi] = hooked;
+                if(++lfi > 1){lfi=0;}
+                hooked = -1;
+            }
+            else
+            {
+                // render fish
+                mIdent(&model);
+                mSetPos(&model, (vec){fp.x, fp.y, fp.z*woff});
+                mRotZ(&model, frr);
+                updateModelView();
+                esBindRender(hooked);
+            }
+        }
+        else
+        {
+            if(t > next_wild_fish)
+            {
+                const float rc = esRandFloat(0.f, 100.f);
+                if(rc < 50.f)     {hooked = (int)roundf(esRandFloat( 7.f, 21.f));}
+                else if(rc < 80.f){hooked = (int)roundf(esRandFloat(22.f, 34.f));}
+                else if(rc < 90.f){hooked = (int)roundf(esRandFloat(35.f, 46.f));}
+                else if(rc < 97.f){hooked = (int)roundf(esRandFloat(47.f, 58.f));}
+                else{hooked = 59;}
+                //hooked = (int)roundf(esRandFloat(7.f, 59.f));
+                next_wild_fish = t + esRandFloat(23.f, 180.f);
+            }
 
-    // render last catch(es)
-    mIdent(&model);
-    mSetPos(&model, (vec){0.f, -0.14f, 0.04f+(woff*-0.026f)});
-    updateModelView();
-    esBindRender(33);
-    //
-    mIdent(&model);
-    mSetPos(&model, (vec){0.02f, 0.2f, 0.05f+(woff*-0.026f)});
-    mRotZ(&model, 90.f*DEG2RAD);
-    updateModelView();
-    esBindRender(44);
+            if(cast == 1){glEnable(GL_BLEND);glUniform1f(opacity_id, 0.5f);}
+            mIdent(&model);
+            mSetPos(&model, (vec){fp.x, fp.y, fp.z*woff});
+            updateModelView();
+            esBindRender(5);
+            if(cast == 1){glDisable(GL_BLEND);}
+        }
+    }
 
     ///
 
@@ -327,7 +446,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     {
         if(     key == GLFW_KEY_LEFT  || key == GLFW_KEY_A){ks[0]=1;}
         else if(key == GLFW_KEY_RIGHT || key == GLFW_KEY_D){ks[1]=1;}
-        else if(key == GLFW_KEY_SPACE)                     {cast=1; }
+        else if(key == GLFW_KEY_SPACE)                     { cast=1;
+                                                             next_wild_fish = t + esRandFloat(23.f, 180.f);}
         else if(key == GLFW_KEY_F) // show average fps
         {
             if(t-lfct > 2.0)
@@ -339,9 +459,13 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
                 fc = 0;
             }
         }
+        // else if(key == GLFW_KEY_E)
+        // {
+        //     hooked = (int)roundf(esRandFloat(7.f, 59.f));
+        // }
         else if(key == GLFW_KEY_R) // reset game
         {
-            resetGame(0);
+            resetGame(1);
         }
         else if(key == GLFW_KEY_ESCAPE)
         {
@@ -356,7 +480,7 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
     {
         if(     key == GLFW_KEY_LEFT  || key == GLFW_KEY_A){ks[0]=0;}
         else if(key == GLFW_KEY_RIGHT || key == GLFW_KEY_D){ks[1]=0;}
-        else if(key == GLFW_KEY_SPACE)                     {cast=0; }
+        else if(key == GLFW_KEY_SPACE)                     { cast=0;}
     }
 }
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
@@ -422,14 +546,17 @@ int main(int argc, char** argv)
     // help
     printf("----\n");
     printf("James William Fletcher (github.com/mrbid)\n");
-    printf("%s - 3D Fishing Game, with 55 species of fish!\n", appTitle);
+    printf("%s - 3D Fishing Game, with 53 species of fish!\n", appTitle);
     printf("----\n");
 #ifndef WEB
     printf("One command line argument, msaa 0-16.\n");
     printf("e.g; ./tuxfishing 16\n");
     printf("----\n");
 #endif
-    printf("AD/LR = Rotate\n"); // to be continued...
+    printf("Mouse = Rotate Camera, Scroll = Zoom Camera\n");
+    printf("W,A / Arrows = Move Rod Cast Direction\n");
+    printf("Space = Cast Rod, the higher the rod when you release space the farther the lure launches.\n");
+    printf("If you see a fish jump out of the water throw a lure after it and you will catch it straight away.\n");
     printf("F = FPS to console.\n");
     printf("R = Reset game.\n");
     printf("----\n");
