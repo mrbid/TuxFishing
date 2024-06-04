@@ -386,6 +386,7 @@ void main_loop()
             fp.y += -fry*rs;
             // fp.x += -fp.x*0.3f*dt;
             // fp.y += -fp.y*0.3f*dt;
+            // fp.z = getWaterHeight(fp.x, fp.y);
             const float wh = getWaterHeight(fp.x, fp.y);
             if(fabsf(wh-fp.z) > 0.03f){fp.z=wh;} // lol
             if(vMag(fp) < 0.1f)
