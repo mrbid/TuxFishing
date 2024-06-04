@@ -790,6 +790,7 @@ int main(int argc, char** argv)
     register_c4();
     register_c5();
     register_c6();
+    register_c7();
     register_c8();
     register_c9();
     register_c10();
