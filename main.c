@@ -109,7 +109,7 @@ mat projection, view, model, modelview;
 
 // camera vars
 uint focus_cursor = 1;
-double sens = 0.003f;
+double sens = 0.003;
 double mx,my,lx,ly;
 float xrot = d2PI;
 float yrot = 1.3f;
