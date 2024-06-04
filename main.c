@@ -10,6 +10,11 @@
 #define uint GLuint
 #define sint GLint
 
+#define max(a,b) \
+    ({ __typeof__ (a) _a = (a); \
+        __typeof__ (b) _b = (b); \
+        _a > _b ? _a : _b; })
+
 #ifdef WEB
     #include <emscripten.h>
     #include <emscripten/html5.h>
@@ -382,13 +387,23 @@ void main_loop()
             // reel it in
             rodr = 0.8f;
             const float rs = 0.32f*dt;
-            // fp.x += -fp.x*0.3f*dt;
-            // fp.y += -fp.y*0.3f*dt;
-            // fp.z = getWaterHeight(fp.x, fp.y);
-            fp.x += -frx*rs;
-            fp.y += -fry*rs;
-            const float wh = getWaterHeight(fp.x, fp.y);
-            if(fabsf(wh-fp.z) > 0.03f){fp.z=wh;} // lol
+            const float n1 = -fp.x*0.3f*dt;
+            const float n2 = -frx*rs;
+            if(n2 < n1)
+            {
+                fp.x += n1;
+                fp.y += -fp.y*0.3f*dt;
+            }
+            else
+            {
+                fp.x += n2;
+                fp.y += -fry*rs;
+            }
+            fp.z = getWaterHeight(fp.x, fp.y);
+            // fp.x += -frx*rs;
+            // fp.y += -fry*rs;
+            // const float wh = getWaterHeight(fp.x, fp.y);
+            //if(fabsf(wh-fp.z) > 0.03f){fp.z=wh;} // lol
             if(vMag(fp) < 0.1f)
             {
                 winning_fish = t+4.f;
