@@ -1,6 +1,6 @@
 # Tux Fishing
 
-![Screenshot of the Tux Fishing game](https://raw.githubusercontent.com/mrbid/TuxFishing/main/screenshot.png)
+[![Screenshot of the Tux Fishing game](https://raw.githubusercontent.com/mrbid/TuxFishing/main/screenshot.png)](https://www.youtube.com/watch?v=HMdYRCAhrAs)
 
 **The first FOSS Linux Fishing game in 3D!**
 
