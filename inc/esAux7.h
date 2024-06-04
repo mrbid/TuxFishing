@@ -48,7 +48,7 @@ typedef struct
     GLuint cid;	// Colour Array Buffer ID
     GLuint nid;	// Normal Array Buffer ID
 #ifdef MAX_MODELS
-    GLuint itp; // Index Type (0:ubyte, 1:ushort, 2:uint)
+    GLuint itp; // Index Type (GL_UNSIGNED_BYTE, GL_UNSIGNED_SHORT, GL_UNSIGNED_INT)
     GLuint ni;  // Number of Indices
 #endif
 } ESModel;
