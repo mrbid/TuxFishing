@@ -10,11 +10,6 @@
 #define uint GLuint
 #define sint GLint
 
-#define max(a,b) \
-    ({ __typeof__ (a) _a = (a); \
-        __typeof__ (b) _b = (b); \
-        _a > _b ? _a : _b; })
-
 #ifdef WEB
     #include <emscripten.h>
     #include <emscripten/html5.h>
