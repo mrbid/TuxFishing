@@ -17,6 +17,11 @@ sudo apt install --assume-yes upx-ucl
 make
 ./release/TuxFishing_linux
 ```
+or
+```
+make deps
+make test
+```
 You don't need [UPX](https://upx.github.io/) but if you don't have the package you can download the binary from [here](https://github.com/upx/upx/releases).
 
 ## attribution
