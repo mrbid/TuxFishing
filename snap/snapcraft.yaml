@@ -1,6 +1,6 @@
 name: tuxfishing
 base: core22
-version: '1.1'
+version: '1.2'
 license: GPL-2.0-only
 summary: 3D Fishing Game
 description: |
