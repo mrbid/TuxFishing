@@ -389,15 +389,18 @@ void main_loop()
             const float rs = 0.32f*dt;
             const float n1 = -fp.x*0.3f*dt;
             const float n2 = -frx*rs;
-            if(n2 < n1)
+            const float o1 = -fp.y*0.3f*dt;
+            const float o2 = -fry*rs;
+            const float x1 = n2+o2, x2 = n1+o1;
+            if(x1*x1 < x2*x2)
             {
                 fp.x += n1;
-                fp.y += -fp.y*0.3f*dt;
+                fp.y += o1;
             }
             else
             {
                 fp.x += n2;
-                fp.y += -fry*rs;
+                fp.y += o2;
             }
             fp.z = getWaterHeight(fp.x, fp.y);
             // fp.x += -frx*rs;
