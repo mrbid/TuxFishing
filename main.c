@@ -146,7 +146,7 @@ float shoal_r1[3];// jump rots
 float shoal_r2[3];
 float shoal_r3[3];
 
-float caught_list[53]={0}; // tally of fish types caught
+float caught_list[56]={0}; // tally of fish types caught
 
 
 //*************************************
@@ -169,7 +169,7 @@ void updateModelView()
 uint ratioCaught()
 {
     uint r = 0;
-    for(uint i=0; i<53; i++){if(caught_list[i] == 1){r++;}}
+    for(uint i=0; i<56; i++){if(caught_list[i] == 1){r++;}}
     return r;
 }
 void rndShoalPos(uint i)
@@ -200,8 +200,8 @@ void resetGame(uint mode)
     what=0;
     next_wild_fish=t+esRandFloat(23.f,180.f);
     caught=0;
-    //for(uint i=0; i<53; i++){caught_list[i]=0;}
-    memset(&caught_list[0], 0x00, sizeof(float)*53);
+    //for(uint i=0; i<56; i++){caught_list[i]=0;}
+    memset(&caught_list[0], 0x00, sizeof(float)*56);
     rndShoalPos(0);
     rndShoalPos(1);
     rndShoalPos(2);
@@ -434,9 +434,9 @@ void main_loop()
                 caught++;
                 char strts[16];
                 timestamp(&strts[0]);
-                printf("[%s] Fish Caught: %u (%u/53)\n", strts, caught, ratioCaught());
+                printf("[%s] Fish Caught: %u (%u/56)\n", strts, caught, ratioCaught());
                 char tmp[256];
-                sprintf(tmp, "Tux 🐟 %u (%u/53) 🐟 Fishing", caught, ratioCaught());
+                sprintf(tmp, "Tux 🐟 %u (%u/56) 🐟 Fishing", caught, ratioCaught());
                 glfwSetWindowTitle(window, tmp);
             }
             else
@@ -617,7 +617,8 @@ void key_callback(GLFWwindow* window, int key, int scancode, int action, int mod
         }
         // else if(key == GLFW_KEY_E)
         // {
-        //     //shoal_nt[0] = t;
+        //     shoal_nt[0] = t;
+        //     shoal_lfi[0] = 62;
         //     //hooked = (int)roundf(esRandFloat(7.f, 59.f));
         // }
         // else if(key == GLFW_KEY_R) // reset game
@@ -703,7 +704,7 @@ int main(int argc, char** argv)
     // help
     printf("----\n");
     printf("James William Fletcher (github.com/mrbid)\n");
-    printf("%s - 3D Fishing Game, with 53 species of fish!\n", appTitle);
+    printf("%s - 3D Fishing Game, with 55 species of fish!\n", appTitle);
     printf("----\n");
 #ifndef WEB
     printf("One command line argument, msaa 0-16.\n");
