@@ -24,7 +24,7 @@
 #define fTime() (float)glfwGetTime()
 
 //#define GL_DEBUG
-#define MAX_MODELS 60 // hard limit, be aware and increase if needed
+#define MAX_MODELS 63 // hard limit, be aware and increase if needed
 #include "inc/esAux7.h"
 #include "inc/matvec.h"
 
@@ -94,6 +94,10 @@
 #include "assets/high/fish/d11.h"    //58
 
 #include "assets/high/fish/e1.h"     //59
+#include "assets/high/fish/e2.h"     //60
+#include "assets/high/fish/e3.h"     //61
+
+#include "assets/high/fish/h1.h"     //62
 
 
 //*************************************
@@ -128,10 +132,11 @@ vec fp = (vec){0.f, 0.f, 0.f}; // float position
 float frx=0.f, fry=0.f, frr=0.f; // float return direction
 int hooked = -1; // is a fish hooked, if so, its the ID of the fish.
 float next_wild_fish = 0.f; // time for next wild fish discovery
-int last_fish[2]={0};
-uint lfi=0;
-float winning_fish = 0.f;
-uint winning_fish_id = 0;
+int last_fish[2]={0}; // last fish id's shown in boat
+uint lfi=0; // last fish index
+float winning_fish = 0.f; // winning animation fish timer
+uint winning_fish_id = 0; // winning fish id
+uint what=0; // wearing hat?
 
 float shoal_x[3]; // position of shoal
 float shoal_y[3]; // position of shoal
@@ -141,7 +146,7 @@ float shoal_r1[3];// jump rots
 float shoal_r2[3];
 float shoal_r3[3];
 
-float caught_list[53]={0};
+float caught_list[53]={0}; // tally of fish types caught
 
 
 //*************************************
@@ -173,7 +178,8 @@ void rndShoalPos(uint i)
     const float rr = esRandFloat(2.3f, 3.6f);
     shoal_x[i] = sinf(ra)*rr;
     shoal_y[i] = cosf(ra)*rr;
-    shoal_lfi[i] = (int)roundf(esRandFloat(7.f, 59.f));
+    if(what == 1){shoal_lfi[i] = (int)roundf(esRandFloat(7.f, 61.f));}
+    else         {shoal_lfi[i] = (int)roundf(esRandFloat(7.f, 62.f));}
     shoal_nt[i] = t + esRandFloat(6.5f, 16.f);
 }
 void resetGame(uint mode)
@@ -191,6 +197,7 @@ void resetGame(uint mode)
     lfi=0;
     winning_fish=0.f;
     winning_fish_id=0;
+    what=0;
     next_wild_fish=t+esRandFloat(23.f,180.f);
     caught=0;
     //for(uint i=0; i<53; i++){caught_list[i]=0;}
@@ -365,6 +372,16 @@ void main_loop()
     updateModelView();
     esBindRender(3);
 
+    // render hat
+    if(what == 1)
+    {
+        mIdent(&model);
+        mSetPos(&model, (vec){0.f, 0.f, 0.196787f+(woff*-0.026f)});
+        mRotZ(&model, pr);
+        updateModelView();
+        esBindRender(62);
+    }
+
     // render rod
     mIdent(&model);
     mSetPos(&model, (vec){0.f, 0.f, 0.125378f+(woff*-0.026f)});
@@ -407,8 +424,11 @@ void main_loop()
                 winning_fish = t+4.f;
                 winning_fish_id = hooked;
                 fp = (vec){0.f, 0.f, 0.f};
-                last_fish[lfi] = hooked;
-                if(++lfi > 1){lfi=0;}
+                if(hooked == 62){what=1;}else
+                {
+                    last_fish[lfi] = hooked;
+                    if(++lfi > 1){lfi=0;}
+                }
                 caught_list[hooked-7] = 1;
                 hooked = -1;
                 caught++;
@@ -810,6 +830,10 @@ int main(int argc, char** argv)
     register_d11();
 
     register_e1();
+    register_e2();
+    register_e3();
+
+    register_h1();
 
 //*************************************
 // configure render options
