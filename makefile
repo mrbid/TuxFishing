@@ -24,10 +24,10 @@ test:
 deps:
 	@echo https://emscripten.org/docs/getting_started/downloads.html
 	@echo https://github.com/upx/upx/releases/tag/v4.2.4
-	sudo apt install libglfw3-dev libglfw3
-	sudo apt install tcc
-	sudo apt install upx-ucl
-	sudo apt install mingw-w64
+	sudo apt install --assume-yes libglfw3-dev libglfw3
+	sudo apt install --assume-yes tcc
+	sudo apt install --assume-yes upx-ucl
+	sudo apt install --assume-yes mingw-w64
 
 clean:
 	rm -f release/$(name)_linux
