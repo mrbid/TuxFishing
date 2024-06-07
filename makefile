@@ -26,6 +26,7 @@ deps:
 	sudo apt install libglfw3-dev libglfw3
 	sudo apt install tcc
 	sudo apt install upx-ucl
+	sudo apt install mingw-w64
 
 clean:
 	rm -f release/$(name)_linux
