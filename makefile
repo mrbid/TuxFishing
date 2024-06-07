@@ -15,6 +15,7 @@ win:
 web:
 	source ~/emsdk/emsdk_env.sh
 	emcc main.c -DWEB -O3 --closure 1 -s FILESYSTEM=0 -s USE_GLFW=3 -s ENVIRONMENT=web -s TOTAL_MEMORY=256MB -I inc -o release/web/index.html --shell-file t.html
+	emrun release/web/index.html
 
 test:
 	tcc main.c -I inc -Ofast -lglfw -lm -o /tmp/$(name)_test
