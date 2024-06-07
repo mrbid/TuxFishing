@@ -14,6 +14,7 @@
 sudo apt install --assume-yes libglfw3-dev libglfw3
 sudo apt install --assume-yes tcc
 sudo apt install --assume-yes upx-ucl
+sudo apt install --assume-yes mingw-w64
 make
 ./release/TuxFishing_linux
 ```
