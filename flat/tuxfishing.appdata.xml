@@ -24,7 +24,7 @@
 	</screenshots>
 	<url type="homepage">https://github.com/mrbid/tuxfishing</url>
 	<releases>
-		<release version="1.2" date="2024-06-06">
+		<release version="1.2" date="2024-06-08">
 			<description><ul><li>Added a fishing hat that can be worn when caught like a fish.</li><li>Added two new fish, one of them being the "pirate fish".</li></ul></description>
 		</release>
 	</releases>
