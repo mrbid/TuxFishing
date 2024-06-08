@@ -712,7 +712,7 @@ int main(int argc, char** argv)
     printf("----\n");
 #endif
     printf("Mouse = Rotate Camera, Scroll = Zoom Camera\n");
-    printf("W,A / Arrows = Move Rod Cast Direction\n");
+    printf("A,D / Arrows = Move Rod Cast Direction\n");
     printf("Space = Cast Rod, the higher the rod when you release space the farther the lure launches.\n");
     printf("If you see a fish jump out of the water throw a lure after it and you will catch it straight away.\n");
     printf("F = FPS to console.\n");
