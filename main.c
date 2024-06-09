@@ -697,16 +697,16 @@ int main(int argc, char** argv)
     focus_cursor = 0;
 #endif
 
-    // allow custom msaa level
-    int msaa = 16;
-    if(argc >= 2){msaa = atoi(argv[1]);}
-
     // help
     printf("----\n");
     printf("James William Fletcher (github.com/mrbid)\n");
     printf("%s - 3D Fishing Game, with 55 species of fish!\n", appTitle);
     printf("----\n");
 #ifndef WEB
+    // allow custom msaa level
+    int msaa = 16;
+    if(argc >= 2){msaa = atoi(argv[1]);}
+
     printf("One command line argument, msaa 0-16.\n");
     printf("e.g; ./tuxfishing 16\n");
     printf("----\n");
