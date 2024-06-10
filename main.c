@@ -693,6 +693,7 @@ EM_BOOL emscripten_resize_event(int eventType, const EmscriptenUiEvent *uiEvent,
 //*************************************
 int main(int argc, char** argv)
 {
+    int msaa = 16;
 #ifdef WEB
     focus_cursor = 0;
 #endif
@@ -704,7 +705,6 @@ int main(int argc, char** argv)
     printf("----\n");
 #ifndef WEB
     // allow custom msaa level
-    int msaa = 16;
     if(argc >= 2){msaa = atoi(argv[1]);}
 
     printf("One command line argument, msaa 0-16.\n");
