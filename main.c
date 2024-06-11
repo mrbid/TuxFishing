@@ -117,6 +117,7 @@ double sens = 0.003;
 double mx,my,lx,ly;
 float xrot = d2PI;
 float yrot = 1.3f;
+float dzoom = -0.3f;
 float zoom = -3.3f;
 
 // game vars
@@ -300,7 +301,8 @@ void main_loop()
     }
 
     mIdent(&view);
-    mSetPos(&view, (vec){0.f, -0.13f, zoom});
+    dzoom += (zoom-dzoom)*3.f*dt;
+    mSetPos(&view, (vec){0.f, -0.13f, dzoom});
     mRotate(&view, yrot, 1.f, 0.f, 0.f);
     mRotate(&view, xrot, 0.f, 0.f, 1.f);
 
@@ -693,7 +695,6 @@ EM_BOOL emscripten_resize_event(int eventType, const EmscriptenUiEvent *uiEvent,
 //*************************************
 int main(int argc, char** argv)
 {
-    int msaa = 16;
 #ifdef WEB
     focus_cursor = 0;
 #endif
@@ -705,6 +706,7 @@ int main(int argc, char** argv)
     printf("----\n");
 #ifndef WEB
     // allow custom msaa level
+    int msaa = 16;
     if(argc >= 2){msaa = atoi(argv[1]);}
 
     printf("One command line argument, msaa 0-16.\n");
@@ -749,8 +751,11 @@ int main(int argc, char** argv)
     const GLFWvidmode* desktop = glfwGetVideoMode(glfwGetPrimaryMonitor());
 #ifndef WEB
     glfwSetWindowPos(window, (desktop->width/2)-(winw/2), (desktop->height/2)-(winh/2)); // center window on desktop
-    glfwGetCursorPos(window, &lx, &ly);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    if(focus_cursor == 1)
+    {
+        glfwGetCursorPos(window, &lx, &ly);
+        glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    }
 #endif
     glfwSetWindowSizeCallback(window, window_size_callback);
     glfwSetKeyCallback(window, key_callback);
