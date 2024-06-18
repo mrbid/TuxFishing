@@ -112,7 +112,7 @@ float t=0.f, dt=0.f, lt=0.f, fc=0.f, lfct=0.f, aspect;
 mat projection, view, model, modelview;
 
 // camera vars
-uint focus_cursor = 1;
+uint focus_cursor = 0;
 double sens = 0.003;
 double mx,my,lx,ly;
 float xrot = d2PI;
@@ -122,7 +122,7 @@ float zoom = -3.3f;
 
 // game vars
 #define FAR_DISTANCE 16.f
-uint ks[2]; // is rotate key pressed toggle
+uint ks[3]; // is rotate key pressed toggle
 uint cast = 0; // is casting toggle
 uint caught = 0; // total fish caught
 float woff = 0.f; // wave offset
@@ -272,13 +272,15 @@ void main_loop()
     {
         if(ks[0] == 1){pr -= 1.6f*dt;fp=(vec){0.f, 0.f, 0.f};}
         if(ks[1] == 1){pr += 1.6f*dt;fp=(vec){0.f, 0.f, 0.f};}
-        if(cast == 1)
+        if(ks[2] == 1){if(fabsf(pr-xrot) > 0.001f){pr += -(pr+xrot+d2PI)*0.016f;}}
+        if(cast > 0)
         {
             if(rodr < 2.f){rodr += 1.5f*dt;}
             const float trodr = (rodr+0.23f)*1.65f;
             frx = sinf(pr+d2PI), fry = cosf(pr+d2PI), frr = -d2PI+pr;
             fp.x = frx*trodr, fp.y = fry*trodr;
             fp.z = getWaterHeight(fp.x, fp.y);
+            if(cast == 2){if(fabsf(pr-xrot) > 0.001f){pr += -(pr+xrot+d2PI)*0.016f;}}
         }
         else{if(rodr > 0.f){rodr -= 9.f*dt;}}
     }
@@ -465,12 +467,12 @@ void main_loop()
                 next_wild_fish = t + esRandFloat(23.f, 180.f);
             }
 
-            if(cast == 1){glEnable(GL_BLEND);glUniform1f(opacity_id, 0.5f);}
+            if(cast > 0){glEnable(GL_BLEND);glUniform1f(opacity_id, 0.5f);}
             mIdent(&model);
             mSetPos(&model, (vec){fp.x, fp.y, fp.z*woff});
             updateModelView();
             esBindRender(5);
-            if(cast == 1){glDisable(GL_BLEND);}
+            if(cast > 0){glDisable(GL_BLEND);}
         }
     }
 
@@ -650,24 +652,38 @@ void scroll_callback(GLFWwindow* window, double xoffset, double yoffset)
 }
 void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
 {
-    if(action == GLFW_PRESS && button == GLFW_MOUSE_BUTTON_LEFT)
+    if(action == GLFW_PRESS)
     {
-        if(focus_cursor == 0)
+        if(button == GLFW_MOUSE_BUTTON_LEFT)
         {
-            focus_cursor = 1;
+            if(focus_cursor == 0)
+            {
+                focus_cursor = 1;
 #ifndef WEB
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-            glfwGetCursorPos(window, &lx, &ly);
+                glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+                glfwGetCursorPos(window, &lx, &ly);
 #endif
+            }
+            if(hooked == -1)
+            {
+                cast=2;
+                next_wild_fish = t + esRandFloat(23.f, 180.f);
+            }
         }
-        else
+        else if(button == GLFW_MOUSE_BUTTON_RIGHT)
         {
-            focus_cursor = 0;
-#ifndef WEB
-            glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_NORMAL);
-            glfwGetCursorPos(window, &lx, &ly);
-#endif
+            if(hooked == -1)
+            {
+                ks[2]=1;
+                next_wild_fish = t + esRandFloat(23.f, 180.f);
+                fp=(vec){0.f, 0.f, 0.f};
+            }
         }
+    }
+    else if(action == GLFW_RELEASE)
+    {
+        if(button == GLFW_MOUSE_BUTTON_LEFT){cast=0;}
+        else if(button == GLFW_MOUSE_BUTTON_RIGHT){ks[2]=0;}
     }
 }
 void window_size_callback(GLFWwindow* window, int width, int height)
@@ -713,14 +729,15 @@ int main(int argc, char** argv)
     printf("e.g; ./tuxfishing 16\n");
     printf("----\n");
 #endif
+    printf("!! Press ESCAPE to release mouse lock.\n");
     printf("Mouse = Rotate Camera, Scroll = Zoom Camera\n");
-    printf("A,D / Arrows = Move Rod Cast Direction\n");
-    printf("Space = Cast Rod, the higher the rod when you release space the farther the lure launches.\n");
+    printf("A,D / Arrows / Right Click = Move Rod Cast Direction\n");
+    printf("Space / Left Click = Cast Rod, the higher the rod when you release space the farther the lure launches.\n");
     printf("If you see a fish jump out of the water throw a lure after it and you will catch it straight away.\n");
     printf("F = FPS to console.\n");
     //printf("R = Reset game.\n");
     printf("----\n");
-    printf("All assets where generated using LUMA GENIE (https://lumalabs.ai/genie).\n");
+    printf("All assets generated using LUMA GENIE (https://lumalabs.ai/genie).\n");
     printf("----\n");
     printf("Tux made by Andy Cuccaro\n");
     printf("https://andycuccaro.gumroad.com/\n");
