@@ -703,6 +703,22 @@ EM_BOOL emscripten_resize_event(int eventType, const EmscriptenUiEvent *uiEvent,
     emscripten_set_canvas_element_size("canvas", winw, winh);
     return EM_FALSE;
 }
+long etse=0;
+EM_BOOL emscripten_touchstart_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
+{
+    if(hooked == -1 && touchEvent->numTouches > 0)
+    {
+        cast=2;
+        etse=touchEvent->touches[0].clientX;
+        next_wild_fish=t+esRandFloat(23.f, 180.f);
+    }
+    return EM_FALSE;
+}
+EM_BOOL emscripten_touchmove_event(int eventType, const EmscriptenTouchEvent *touchEvent, void *userData)
+{
+    if(touchEvent->numTouches > 0){xrot+=(((float)(etse-touchEvent->touches[0].clientX))/((float)winw))*0.032f;}
+    return EM_FALSE;
+}
 #endif
 
 //*************************************
@@ -893,6 +909,8 @@ int main(int argc, char** argv)
 
     // loop
 #ifdef WEB
+    emscripten_set_touchstart_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, emscripten_touchstart_event);
+    emscripten_set_touchmove_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, emscripten_touchmove_event);
     emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, NULL, EM_FALSE, emscripten_resize_event);
     emscripten_set_main_loop(main_loop, 0, 1);
 #else
