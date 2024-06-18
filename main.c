@@ -272,7 +272,7 @@ void main_loop()
     {
         if(ks[0] == 1){pr -= 1.6f*dt;fp=(vec){0.f, 0.f, 0.f};}
         if(ks[1] == 1){pr += 1.6f*dt;fp=(vec){0.f, 0.f, 0.f};}
-        if(ks[2] == 1){if(fabsf(pr-xrot) > 0.001f){pr += -(pr+xrot+d2PI)*0.016f;}}
+        if(ks[2] == 1){if(fabsf(pr-xrot) > 0.001f){pr += -(pr+xrot+d2PI)*0.016f;fp=(vec){0.f, 0.f, 0.f};}}
         if(cast > 0)
         {
             if(rodr < 2.f){rodr += 1.5f*dt;}
@@ -676,7 +676,6 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
             {
                 ks[2]=1;
                 next_wild_fish = t + esRandFloat(23.f, 180.f);
-                fp=(vec){0.f, 0.f, 0.f};
             }
         }
     }
