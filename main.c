@@ -664,7 +664,7 @@ void mouse_button_callback(GLFWwindow* window, int button, int action, int mods)
                 glfwGetCursorPos(window, &lx, &ly);
 #endif
             }
-            if(hooked == -1)
+            else if(hooked == -1)
             {
                 cast=2;
                 next_wild_fish = t + esRandFloat(23.f, 180.f);
