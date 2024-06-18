@@ -25,7 +25,7 @@
 	<url type="homepage">https://github.com/mrbid/tuxfishing</url>
 	<releases>
 		<release version="1.4" date="2024-06-18">
-			<description><ul><li>Added a fishing hat that can be worn when caught like a fish.</li><li>Added two new fish, one of them being the "pirate fish".</li><li>Smoother mouse zoom.</li></ul></description>
+			<description><ul><li>Added Left &amp; Right click fishing.</li><li>Added a fishing hat that can be worn when caught like a fish.</li><li>Added two new fish, one of them being the "pirate fish".</li><li>Smoother mouse zoom.</li></ul></description>
 		</release>
 	</releases>
 	<content_rating type="oars-1.0" />
