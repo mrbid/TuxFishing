@@ -22,6 +22,14 @@
 			<image>https://raw.githubusercontent.com/mrbid/TuxFishing/main/screenshot.png</image>
 			<caption>Tux preparing to cast his lure!</caption>
 		</screenshot>
+		<screenshot type="default">
+			<image>https://raw.githubusercontent.com/mrbid/TuxFishing/main/screenshot1.png</image>
+			<caption>Tux after catching his fishing hat!</caption>
+		</screenshot>
+		<screenshot type="default">
+			<image>https://raw.githubusercontent.com/mrbid/TuxFishing/main/screenshot2.png</image>
+			<caption>Tux making tidal waves with a Dragon and Pirate fish in one boat!</caption>
+		</screenshot>
 	</screenshots>
 	<url type="homepage">https://github.com/mrbid/tuxfishing</url>
 	<releases>
