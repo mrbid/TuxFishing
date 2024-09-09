@@ -276,13 +276,14 @@ void main_loop()
         if(cast > 0)
         {
             if(rodr < 2.f){rodr += 1.5f*dt;}
-            const float trodr = (rodr+0.23f)*1.65f;
+            const float trodr = (rodr+0.2f)*1.65f;
             frx = sinf(pr+d2PI), fry = cosf(pr+d2PI), frr = -d2PI+pr;
             fp.x = frx*trodr, fp.y = fry*trodr;
             fp.z = getWaterHeight(fp.x, fp.y);
             if(cast == 2){if(fabsf(pr-xrot) > 0.001f){pr += -(pr+xrot+d2PI)*0.016f;}}
         }
         else{if(rodr > 0.f){rodr -= 9.f*dt;}}
+        if(rodr < 0.f){rodr = 0.f;}
     }
 
     // water offset
