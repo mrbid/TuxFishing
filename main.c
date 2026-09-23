@@ -216,6 +216,7 @@ void resetGame(uint mode)
 }
 float wrapPi(float a)
 {
+	// return a - x2PI * floorf((a + PI) * 0.15915493866364265322f);
     a = fmodf(a + PI, x2PI);
     if(a < 0.f) a += x2PI;
     return a - PI;
@@ -382,6 +383,7 @@ void main_loop()
         }
         else{if(rodr > 0.f){rodr -= 9.f*dt;}}
         if(rodr < 0.f){rodr = 0.f;}
+		pr = wrapPi(pr);
     }
 
     // water offset
