@@ -214,27 +214,64 @@ void resetGame(uint mode)
     }
     glfwSetWindowTitle(window, appTitle);
 }
+float wrapPi(float a)
+{
+    a = fmodf(a + PI, x2PI);
+    if(a < 0.f) a += x2PI;
+    return a - PI;
+}
 float getWaterHeight(float x, float y)
 {
-    const uint imax = water_numvert*3;
-    int ci = -1;
-    float cid = 9999.f;
-    for(uint i=0; i < imax; i+=3)
+    // barycentric interpolation on the triangle under (x, y).
+    // water is scaled in Z by woff at draw time, so this returns rest-pose height.
+    const float eps = -0.0001f;
+    float best_z = 0.f;
+    float best_d = 9999.f;
+    int found = 0;
+
+    for(uint i = 0; i < water_numind; i += 3)
     {
-        const float xm = water_vertices[i]   - x;
-        const float ym = water_vertices[i+1] - y;
-        const float nd = xm*xm + ym*ym;
-        if(nd < cid)
+        const uint ia = (uint)water_indices[i]     * 3u;
+        const uint ib = (uint)water_indices[i + 1] * 3u;
+        const uint ic = (uint)water_indices[i + 2] * 3u;
+
+        const float ax = water_vertices[ia], ay = water_vertices[ia + 1], az = water_vertices[ia + 2];
+        const float bx = water_vertices[ib], by = water_vertices[ib + 1], bz = water_vertices[ib + 2];
+        const float cx = water_vertices[ic], cy = water_vertices[ic + 1], cz = water_vertices[ic + 2];
+
+        // 2D barycentric in the XY plane (heightfield projection of the face)
+        const float v0x = bx - ax, v0y = by - ay;
+        const float v1x = cx - ax, v1y = cy - ay;
+        const float v2x = x  - ax, v2y = y  - ay;
+        const float d00 = v0x*v0x + v0y*v0y;
+        const float d01 = v0x*v1x + v0y*v1y;
+        const float d11 = v1x*v1x + v1y*v1y;
+        const float d20 = v0x*v2x + v0y*v2y;
+        const float d21 = v1x*v2x + v1y*v2y;
+        const float denom = d00*d11 - d01*d01;
+        if(denom > -1e-12f && denom < 1e-12f)
+            continue; // degenerate / edge-on triangle
+
+        const float inv = 1.f / denom;
+        const float v = (d11*d20 - d01*d21) * inv;
+        const float w = (d00*d21 - d01*d20) * inv;
+        const float u = 1.f - v - w;
+
+        if(u >= eps && v >= eps && w >= eps)
         {
-            ci = i;
-            cid = nd;
+            return u*az + v*bz + w*cz; // on this face
         }
+
+        // keep nearest vertex as fallback if the point is off the mesh
+        const float da = v2x*v2x + v2y*v2y;
+        const float dbx = x-bx, dby = y-by, db = dbx*dbx + dby*dby;
+        const float dcx = x-cx, dcy = y-cy, dc = dcx*dcx + dcy*dcy;
+        if(da < best_d){ best_d = da; best_z = az; found = 1; }
+        if(db < best_d){ best_d = db; best_z = bz; found = 1; }
+        if(dc < best_d){ best_d = dc; best_z = cz; found = 1; }
     }
-    if(ci != -1)
-    {
-        return water_vertices[ci+2];
-    }
-    return woff;
+
+    return found ? best_z : 0.f;
 }
 
 //*************************************
@@ -272,7 +309,15 @@ void main_loop()
     {
         if(ks[0] == 1){pr -= 1.6f*dt;fp=(vec){0.f, 0.f, 0.f};}
         if(ks[1] == 1){pr += 1.6f*dt;fp=(vec){0.f, 0.f, 0.f};}
-        if(ks[2] == 1){if(fabsf(pr-xrot) > 0.001f){pr += -(pr+xrot+d2PI)*0.016f;fp=(vec){0.f, 0.f, 0.f};}}
+        if(ks[2] == 1)
+        {
+            const float dd = wrapPi((-xrot - d2PI) - pr);
+            if(fabsf(dd) > 0.001f)
+            {
+                pr += dd * 0.016f;
+                fp = (vec){0.f, 0.f, 0.f};
+            }
+        }
         if(cast > 0)
         {
             if(rodr < 2.f){rodr += 1.5f*dt;}
@@ -280,7 +325,11 @@ void main_loop()
             frx = sinf(pr+d2PI), fry = cosf(pr+d2PI), frr = -d2PI+pr;
             fp.x = frx*trodr, fp.y = fry*trodr;
             fp.z = getWaterHeight(fp.x, fp.y);
-            if(cast == 2){if(fabsf(pr-xrot) > 0.001f){pr += -(pr+xrot+d2PI)*0.016f;}}
+            if(cast == 2)
+            {
+                const float dd = wrapPi((-xrot - d2PI) - pr);
+                if(fabsf(dd) > 0.001f){pr += dd * 0.016f;}
+            }
         }
         else{if(rodr > 0.f){rodr -= 9.f*dt;}}
         if(rodr < 0.f){rodr = 0.f;}
@@ -295,6 +344,7 @@ void main_loop()
         glfwGetCursorPos(window, &mx, &my);
 
         xrot += (float)((lx-mx)*sens);
+        xrot = wrapPi(xrot);
         yrot += (float)((ly-my)*sens);
 
         if(yrot > 1.5f){yrot = 1.5f;}
