@@ -220,58 +220,107 @@ float wrapPi(float a)
     if(a < 0.f) a += x2PI;
     return a - PI;
 }
+#define WHN 32
+#define WHMAX 96
+float wh_minx, wh_miny, wh_scalex, wh_scaley;
+uint wh_n[WHN*WHN];
+uint wh_tri[WHN*WHN][WHMAX];
+uint wh_ready = 0;
+
+void bakeWaterHeight()
+{
+    if(wh_ready == 1){return;}
+    wh_minx =  9999.f; wh_miny =  9999.f;
+    float maxx = -9999.f, maxy = -9999.f;
+    const uint vmax = water_numvert*3;
+    for(uint i=0; i<vmax; i+=3)
+    {
+        const float vx = water_vertices[i], vy = water_vertices[i+1];
+        if(vx < wh_minx){wh_minx = vx;} if(vx > maxx){maxx = vx;}
+        if(vy < wh_miny){wh_miny = vy;} if(vy > maxy){maxy = vy;}
+    }
+    const float pad = 0.05f;
+    wh_minx -= pad; wh_miny -= pad; maxx += pad; maxy += pad;
+    wh_scalex = (float)(WHN-1) / (maxx - wh_minx);
+    wh_scaley = (float)(WHN-1) / (maxy - wh_miny);
+    memset(&wh_n[0], 0x00, sizeof(wh_n));
+
+    for(uint t=0; t<water_numind; t+=3)
+    {
+        const uint ia = (uint)water_indices[t]     * 3u;
+        const uint ib = (uint)water_indices[t + 1] * 3u;
+        const uint ic = (uint)water_indices[t + 2] * 3u;
+        const float tx0 = water_vertices[ia], ty0 = water_vertices[ia+1];
+        const float tx1 = water_vertices[ib], ty1 = water_vertices[ib+1];
+        const float tx2 = water_vertices[ic], ty2 = water_vertices[ic+1];
+        float tminx = tx0, tmaxx = tx0, tminy = ty0, tmaxy = ty0;
+        if(tx1 < tminx){tminx = tx1;} if(tx1 > tmaxx){tmaxx = tx1;}
+        if(tx2 < tminx){tminx = tx2;} if(tx2 > tmaxx){tmaxx = tx2;}
+        if(ty1 < tminy){tminy = ty1;} if(ty1 > tmaxy){tmaxy = ty1;}
+        if(ty2 < tminy){tminy = ty2;} if(ty2 > tmaxy){tmaxy = ty2;}
+        int i0 = (int)((tminx - wh_minx) * wh_scalex);
+        int i1 = (int)((tmaxx - wh_minx) * wh_scalex);
+        int j0 = (int)((tminy - wh_miny) * wh_scaley);
+        int j1 = (int)((tmaxy - wh_miny) * wh_scaley);
+        if(i0 < 0){i0 = 0;} if(i1 < 0){i1 = 0;}
+        if(j0 < 0){j0 = 0;} if(j1 < 0){j1 = 0;}
+        if(i0 > WHN-1){i0 = WHN-1;} if(i1 > WHN-1){i1 = WHN-1;}
+        if(j0 > WHN-1){j0 = WHN-1;} if(j1 > WHN-1){j1 = WHN-1;}
+        for(int j=j0; j<=j1; j++)
+        {
+            for(int i=i0; i<=i1; i++)
+            {
+                const uint c = (uint)j*WHN + (uint)i;
+                if(wh_n[c] < WHMAX){wh_tri[c][wh_n[c]++] = t;}
+            }
+        }
+    }
+    wh_ready = 1;
+}
+
 float getWaterHeight(float x, float y)
 {
-    // barycentric interpolation on the triangle under (x, y).
-    // water is scaled in Z by woff at draw time, so this returns rest-pose height.
-    const float eps = -0.0001f;
-    float best_z = 0.f;
-    float best_d = 9999.f;
-    int found = 0;
-
-    for(uint i = 0; i < water_numind; i += 3)
+    // barycentric interpolation on the triangle under (x, y)
+    bakeWaterHeight();
+    int ix = (int)((x - wh_minx) * wh_scalex);
+    int iy = (int)((y - wh_miny) * wh_scaley);
+    if(ix < 0){ix = 0;} else if(ix > WHN-1){ix = WHN-1;}
+    if(iy < 0){iy = 0;} else if(iy > WHN-1){iy = WHN-1;}
+    const uint c = (uint)iy*WHN + (uint)ix;
+    float best_z = 0.f, best_d = 9999.f;
+    for(uint n=0; n<wh_n[c]; n++)
     {
-        const uint ia = (uint)water_indices[i]     * 3u;
-        const uint ib = (uint)water_indices[i + 1] * 3u;
-        const uint ic = (uint)water_indices[i + 2] * 3u;
-
-        const float ax = water_vertices[ia], ay = water_vertices[ia + 1], az = water_vertices[ia + 2];
-        const float bx = water_vertices[ib], by = water_vertices[ib + 1], bz = water_vertices[ib + 2];
-        const float cx = water_vertices[ic], cy = water_vertices[ic + 1], cz = water_vertices[ic + 2];
-
-        // 2D barycentric in the XY plane (heightfield projection of the face)
-        const float v0x = bx - ax, v0y = by - ay;
-        const float v1x = cx - ax, v1y = cy - ay;
-        const float v2x = x  - ax, v2y = y  - ay;
+        const uint t0 = wh_tri[c][n];
+        const uint ia = (uint)water_indices[t0]     * 3u;
+        const uint ib = (uint)water_indices[t0 + 1] * 3u;
+        const uint ic = (uint)water_indices[t0 + 2] * 3u;
+        const float ax = water_vertices[ia], ay = water_vertices[ia+1], az = water_vertices[ia+2];
+        const float bx = water_vertices[ib], by = water_vertices[ib+1], bz = water_vertices[ib+2];
+        const float cx = water_vertices[ic], cy = water_vertices[ic+1], cz = water_vertices[ic+2];
+        const float v0x = bx-ax, v0y = by-ay;
+        const float v1x = cx-ax, v1y = cy-ay;
+        const float v2x = x-ax,  v2y = y-ay;
         const float d00 = v0x*v0x + v0y*v0y;
         const float d01 = v0x*v1x + v0y*v1y;
         const float d11 = v1x*v1x + v1y*v1y;
         const float d20 = v0x*v2x + v0y*v2y;
         const float d21 = v1x*v2x + v1y*v2y;
         const float denom = d00*d11 - d01*d01;
-        if(denom > -1e-12f && denom < 1e-12f)
-            continue; // degenerate / edge-on triangle
-
+        const float da = v2x*v2x + v2y*v2y;
+        const float dbx = x-bx, dby = y-by, db = dbx*dbx + dby*dby;
+        const float dcx = x-cx, dcy = y-cy, dc = dcx*dcx + dcy*dcy;
+        if(da < best_d){best_d = da; best_z = az;}
+        if(db < best_d){best_d = db; best_z = bz;}
+        if(dc < best_d){best_d = dc; best_z = cz;}
+        if(denom > -1e-12f && denom < 1e-12f){continue;}
         const float inv = 1.f / denom;
         const float v = (d11*d20 - d01*d21) * inv;
         const float w = (d00*d21 - d01*d20) * inv;
         const float u = 1.f - v - w;
-
-        if(u >= eps && v >= eps && w >= eps)
-        {
-            return u*az + v*bz + w*cz; // on this face
-        }
-
-        // keep nearest vertex as fallback if the point is off the mesh
-        const float da = v2x*v2x + v2y*v2y;
-        const float dbx = x-bx, dby = y-by, db = dbx*dbx + dby*dby;
-        const float dcx = x-cx, dcy = y-cy, dc = dcx*dcx + dcy*dcy;
-        if(da < best_d){ best_d = da; best_z = az; found = 1; }
-        if(db < best_d){ best_d = db; best_z = bz; found = 1; }
-        if(dc < best_d){ best_d = dc; best_z = cz; found = 1; }
+        if(u >= -0.0001f && v >= -0.0001f && w >= -0.0001f)
+            return u*az + v*bz + w*cz;
     }
-
-    return found ? best_z : 0.f;
+    return best_z;
 }
 
 //*************************************
@@ -314,7 +363,7 @@ void main_loop()
             const float dd = wrapPi((-xrot - d2PI) - pr);
             if(fabsf(dd) > 0.001f)
             {
-                pr += dd * 0.016f;
+                pr += dd * dt * 3.6f;
                 fp = (vec){0.f, 0.f, 0.f};
             }
         }
@@ -328,7 +377,7 @@ void main_loop()
             if(cast == 2)
             {
                 const float dd = wrapPi((-xrot - d2PI) - pr);
-                if(fabsf(dd) > 0.001f){pr += dd * 0.016f;}
+                if(fabsf(dd) > 0.001f){pr += dd * dt * 3.6f;}
             }
         }
         else{if(rodr > 0.f){rodr -= 9.f*dt;}}
@@ -957,6 +1006,7 @@ int main(int argc, char** argv)
 
     // game init
     resetGame(0);
+    bakeWaterHeight();
 
     // loop
 #ifdef WEB
